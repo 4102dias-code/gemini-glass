@@ -348,7 +348,8 @@ const H=document.documentElement;
 
 /* ───────── ayarlar və sabitlər ───────── */
 const BASE='https://generativelanguage.googleapis.com/v1beta';
-const DEF={key:'',model:'gemini-2.5-flash',theme:'dark',accent:'blue',anim:true,lens:true,blur:22,temp:1,maxTokens:'',role:'general',custom:'',name:'',web:false,side:true,lang:'az-AZ'};
+const DEF={key:'',model:'gemini-1.5-flash',theme:'dark',accent:'blue',anim:true,lens:true,blur:22,temp:1,maxTokens:'',role:'general',custom:'',name:'',web:false,side:true,lang:'az-AZ'};
+const FALLBACK=[{id:'gemini-1.5-pro',n:'Gemini 1.5 Pro'},{id:'gemini-1.5-flash',n:'Gemini 1.5 Flash'},{id:'gemini-2.0-flash-exp',n:'Gemini 2.0 Flash'}];
 const ROLES={
   general:{n:'Ümumi köməkçi',s:''},
   dev:{n:'Proqramçı',s:'Sən təcrübəli proqramçısan. Kodu işləyən nümunələrlə və qısa izahla ver, xətaların səbəbini dəqiq göstər.'},
@@ -358,7 +359,6 @@ const ROLES={
   custom:{n:'Xüsusi rol',s:''}
 };
 const BASE_SYS='İstifadəçinin yazdığı dildə cavab ver. Azərbaycan dilində yazanda təbii və qrammatik cəhətdən düzgün Azərbaycan dili işlət. Cavabları Markdown ilə yığcam və aydın formatla.';
-const FALLBACK=[{id:'gemini-2.5-pro',n:'Gemini 2.5 Pro'},{id:'gemini-2.5-flash',n:'Gemini 2.5 Flash'},{id:'gemini-2.5-flash-lite',n:'Gemini 2.5 Flash-Lite'}];
 const SUG=[
   ['Kodu yoxla','Bu kodda səhvi tap və düzəlt:\n\n'],
   ['Mətni redaktə et','Bu mətni mənasını dəyişmədən daha aydın və qısa yaz:\n\n'],
@@ -975,8 +975,14 @@ const persist=c=>B().save_chat(c).catch(()=>toast('Söhbət yadda saxlanılmadı
 /* ───────── başlanğıc ───────── */
 let booted=false;
 async function boot(){
+  async function boot(){
   if(booted)return;booted=true;
   Object.assign(cfg,await B().settings()||{});
+  // Köhnə yanlış model yaddaşda qalıbsa, avtomatik düzəlt
+  if(cfg.model==='gemini-2.5-flash'||cfg.model==='gemini-2.5-pro'||cfg.model==='gemini-2.5-flash-lite'){
+    cfg.model='gemini-1.5-flash';
+    saveCfg();
+  }
   if(webMode&&navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
   build();look();bar();
   S.index=(await B().chats())||[];
